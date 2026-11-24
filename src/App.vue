@@ -4,7 +4,9 @@ import { ref, onMounted, onUnmounted } from 'vue'
 // Native Vue SPA host for the complete original interactive pages.
 // Keeping the original JS/data in same-origin pages preserves the original
 // map behaviors and provides pixel-identical visuals without data conversion.
-const screen = ref('/original/index.html')
+const base = import.meta.env.BASE_URL
+const originalRoot = `${base}original/`
+const screen = ref(`${originalRoot}index.html`)
 const frame = ref(null)
 const loading = ref(true)
 
@@ -18,8 +20,8 @@ const provinceSlugs = new Set([
 function pathForRoute() {
   const slug = new URLSearchParams(location.search).get('province')
   return slug && provinceSlugs.has(slug)
-    ? `/original/${slug}/${slug}_flood_map.html`
-    : '/original/index.html'
+    ? `${originalRoot}${slug}/${slug}_flood_map.html`
+    : `${originalRoot}index.html`
 }
 function navigate(url, replace = false) {
   screen.value = url
@@ -28,7 +30,7 @@ function navigate(url, replace = false) {
   else history.pushState({}, '', location.pathname + urlToQuery(url))
 }
 function urlToQuery(url) {
-  const slug = url.match(/^\/original\/([a-z]+)\/\1_flood_map\.html$/)?.[1]
+  const slug = url.match(/\/original\/([a-z]+)\/\1_flood_map\.html$/)?.[1]
   return slug ? `?province=${slug}` : ''
 }
 function onFrameLoad() {
@@ -36,8 +38,8 @@ function onFrameLoad() {
   try {
     const doc = frame.value.contentDocument
     const current = frame.value.contentWindow.location.pathname
-    if (current !== screen.value && current.startsWith('/original/')) {
-      screen.value = current
+    if (current !== new URL(screen.value, location.href).pathname && current.includes('/original/')) {
+      screen.value = `${base}${current.split('/original/')[1] ? `original/${current.split('/original/')[1]}` : 'original/index.html'}`
       history.replaceState({}, '', location.pathname + urlToQuery(current))
     }
     // Intercept only cross-document links. All in-page interaction stays original.
@@ -45,9 +47,9 @@ function onFrameLoad() {
       const link = e.target.closest?.('a[href]')
       if (!link || e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return
       const url = new URL(link.href, location.origin)
-      if (url.origin === location.origin && url.pathname.startsWith('/original/') && url.pathname.endsWith('.html')) {
+      if (url.origin === location.origin && url.pathname.includes('/original/') && url.pathname.endsWith('.html')) {
         e.preventDefault()
-        navigate(url.pathname)
+        navigate(`${originalRoot}${url.pathname.split('/original/')[1]}`)
       }
     })
     // Original province switchers assign iframe-local location.href;
