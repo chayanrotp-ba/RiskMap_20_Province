@@ -90,6 +90,11 @@
   .pc-foot .st { color: var(--st); font-weight: 600; }
   .pc-foot .st::before { content: ''; display: inline-block; width: 7px; height: 7px; background: var(--st); transform: rotate(45deg); margin-right: 6px; border-radius: 1px; vertical-align: 1px; }
   .notes { color: var(--muted); font-size: 12.5px; display: grid; gap: 4px; }
+  .year-filter { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:4px; color:var(--muted); font-size:13px; }
+  .year-filter label { display:flex; align-items:center; gap:6px; }
+  .year-filter select, .year-filter button { border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--text); padding:7px 10px; font:inherit; }
+  .year-filter button { cursor:pointer; }
+  .year-filter b { color:var(--text); }
   .notes p { margin: 0; max-width: 110ch; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -99,6 +104,13 @@
     <div class="eyebrow">ข้อมูลประกาศเขตภัยพิบัติ ปภ. · อุทกภัย พ.ศ. 2556–2568 · 20 จังหวัดศึกษา</div>
     <h1>หมู่บ้านน้ำท่วมซ้ำ 20 จังหวัด</h1>
     <p class="lede">แต่ละการ์ดคือ 1 จังหวัด แถบสีบอกสัดส่วนหมู่บ้านตามระดับความเสี่ยง แถบช่องเล็กคือจำนวนหมู่บ้านที่ถูกประกาศรายปี กดการ์ดเพื่อเปิดแผนที่รายหมู่บ้าน จุดติดตั้งสถานีวัดฝนใหม่ และข่าวประกอบ</p>
+    <div class="year-filter" role="group" aria-label="กรองช่วงปี">
+      <label>ตั้งแต่ พ.ศ. <select id="year-start" aria-label="ปีเริ่มต้น"></select></label>
+      <span>ถึง</span>
+      <label>พ.ศ. <select id="year-end" aria-label="ปีสิ้นสุด"></select></label>
+      <button id="reset-years" type="button">แสดงทั้งหมด</button>
+      <b id="year-range-label"></b>
+    </div>
   </header>
   <div class="totals" id="totals"></div>
   <div class="bar">
@@ -162,6 +174,49 @@ function render() {
   }).join('');
 }
 render();
+</script>
+
+<script>
+(() => {
+  const years = Array.from({length: 13}, (_, i) => 2013 + i);
+  const start = document.getElementById('year-start');
+  const end = document.getElementById('year-end');
+  const label = document.getElementById('year-range-label');
+  const be = y => y + 543;
+  years.forEach(y => {
+    const a = document.createElement('option'); a.value = y; a.textContent = be(y); start.appendChild(a);
+    const b = document.createElement('option'); b.value = y; b.textContent = be(y); end.appendChild(b);
+  });
+  start.value = years[0]; end.value = years[years.length - 1];
+  const total = document.querySelector('.tot');
+  if (total) {
+    total.querySelector('span').textContent = 'ยอดประกาศหมู่บ้านรวมรายปี';
+    total.querySelector('small').textContent = '20 จังหวัด · อาจนับซ้ำข้ามปี';
+  }
+  const update = () => {
+    const first = Number(start.value), last = Number(end.value);
+    let sum = 0;
+    document.querySelectorAll('.pc').forEach(card => {
+      const cells = Array.from(card.querySelectorAll('.heat i'));
+      cells.forEach((cell, i) => {
+        const year = years[i];
+        const match = cell.title.match(/: ([\d,]+)/);
+        const count = match ? Number(match[1].replace(/,/g, '')) : 0;
+        const visible = year >= first && year <= last;
+        cell.hidden = !visible;
+        if (visible) sum += count;
+      });
+      const captions = card.querySelectorAll('.heat-x span');
+      if (captions.length >= 3) { captions[0].textContent = be(first); captions[2].textContent = be(last); }
+    });
+    if (total) total.querySelector('b').textContent = sum.toLocaleString('th-TH');
+    label.textContent = 'แสดง พ.ศ. ' + be(first) + '–' + be(last);
+  };
+  start.addEventListener('change', () => { if (Number(start.value) > Number(end.value)) end.value = start.value; update(); });
+  end.addEventListener('change', () => { if (Number(end.value) < Number(start.value)) start.value = end.value; update(); });
+  document.getElementById('reset-years').addEventListener('click', () => { start.value = years[0]; end.value = years[years.length - 1]; update(); });
+  update();
+})();
 </script>
 
 </body></html>
