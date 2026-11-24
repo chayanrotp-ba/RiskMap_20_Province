@@ -3,6 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>น้ำท่วมซ้ำ น่าน</title>
+<script>if (new URLSearchParams(location.search).get('map') === '1') document.documentElement.classList.add('map-only');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
@@ -134,6 +135,8 @@
   @media (max-width: 920px) { .map-card { position: static; } }
   .mapbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; padding: 2px 2px 0; }
   .mapbar .ttl { font-family: var(--f-display); font-weight: 600; font-size: 14.5px; padding-left: 4px; }
+  .map-open { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border: 1px solid var(--line-2); border-radius: 999px; color: var(--ink-2); background: var(--surface); font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+  .map-open:hover { color: var(--accent); border-color: var(--accent); text-decoration: none; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .lchip { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--ink-2); background: var(--surface); }
   .lchip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
@@ -321,6 +324,19 @@
          z-index: 40; opacity: 0; transform: translate(-50%, calc(-100% - 12px)); transition: opacity .1s; max-width: 280px; box-shadow: 0 6px 20px rgba(0, 0, 0, .2); }
   #tip b { display: block; font-weight: 600; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  html.map-only, html.map-only body { width: 100%; height: 100%; overflow: hidden; }
+  html.map-only body { background: var(--bg); }
+  html.map-only .topbar, html.map-only .wrap > :not(.work), html.map-only .panel, html.map-only .map-open { display: none !important; }
+  html.map-only .wrap { width: 100%; max-width: none; height: 100dvh; padding: 0; display: block; }
+  html.map-only .work { display: block; height: 100%; }
+  html.map-only .map-card { height: 100%; position: static; padding: clamp(8px, 1.5vw, 16px); border: 0; border-radius: 0; box-shadow: none; gap: 8px; grid-template-rows: auto minmax(0, 1fr) auto; }
+  html.map-only .map-frame { width: min(100%, calc((100dvh - 112px) * var(--ar, .61))); height: min(calc(100dvh - 112px), calc(100vw / var(--ar, .61))); aspect-ratio: var(--ar, .61); margin: auto; }
+  html.map-only svg#map { width: 100%; height: 100%; }
+  @media (max-width: 640px) {
+    html.map-only .mapbar { justify-content: center; }
+    html.map-only .map-frame { width: min(100%, calc((100dvh - 154px) * var(--ar, .61))); height: min(calc(100dvh - 154px), calc(100vw / var(--ar, .61))); }
+    html.map-only .legend { justify-content: center; gap: 3px 9px; font-size: 11px; }
+  }
 </style>
 
 <div class="topbar">
@@ -363,6 +379,7 @@
     <section class="card map-card" aria-label="แผนที่">
       <div class="mapbar">
         <span class="ttl" id="map-title">แผนที่หมู่บ้านเสี่ยง</span>
+        <a class="map-open" href="?map=1" target="_blank" rel="noopener" aria-label="เปิดแผนที่น่านเต็มหน้าในแท็บใหม่">↗ เปิดแผนที่เต็มหน้า</a>
         <div class="chips" role="group" aria-label="ชั้นข้อมูลบนแผนที่">
           <button type="button" class="lchip st" id="lay-st" aria-pressed="true">◆ สถานีฝนใหม่</button>
           <button type="button" class="lchip" id="lay-hill" aria-pressed="true">ภูมิประเทศ</button>
